@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
+export const maxDuration = 60;
+
 export async function POST(req) {
   try {
     const { pdfBase64, prompt } = await req.json();
@@ -32,3 +34,11 @@ export async function POST(req) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "20mb",
+    },
+  },
+};
