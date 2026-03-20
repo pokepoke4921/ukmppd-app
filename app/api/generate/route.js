@@ -1,24 +1,38 @@
-import Anthropic from "@anthropic-ai/sdk";
-
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 export async function POST(req) {
   try {
     const { pdfBase64, prompt } = await req.json();
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1500,
-      messages: [{
-        role: "user",
-        content: [
-          { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
-          { type: "text", text: prompt }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+    const body = {
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
+          { text: prompt }
         ]
-      }]
+      }],
+      generationConfig: { maxOutputTokens: 8192, temperature: 0.4 }
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
     });
-    return Response.json({ content: response.content });
+
+    const data = await response.json();
+
+    if (data.error) {
+      return Response.json({ error: data.error.message }, { status: 500 });
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return Response.json({ content: [{ type: "text", text }] });
+
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
