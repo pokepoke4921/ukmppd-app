@@ -7,7 +7,6 @@ export async function POST(req) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`;
-```
 
     const body = {
       contents: [{
